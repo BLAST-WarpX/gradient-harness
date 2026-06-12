@@ -4,8 +4,8 @@ include ../defs.mk
 all: square.o 
 
 # Generate LLVM IR
-square.ll: square.cpp square.h
-	$(CXX) $< -S -emit-llvm -O2 -fno-vectorize -fno-slp-vectorize -fno-unroll-loops -o $@
+square.ll: square.c square.h
+	$(CC) $< -S -emit-llvm -O2 -fno-vectorize -fno-slp-vectorize -fno-unroll-loops -o $@
 
 # Apply Enzyme plugin to LLVM IR
 square_enzyme.ll: square.ll
@@ -13,7 +13,7 @@ square_enzyme.ll: square.ll
 
 # Optimize Enzyme output and compile
 square.o: square_enzyme.ll
-	$(CXX) $< -O2 -o $@
+	$(CC) $< -O2 -o $@
 
 .PHONY: clean
 clean:
