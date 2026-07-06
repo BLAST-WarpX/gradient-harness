@@ -9,7 +9,7 @@ norm.ll: norm.c norm.h
 
 # Apply Enzyme plugin to LLVM IR
 norm_enzyme.ll: norm.ll
-	$(LLVM_DIR)/bin/opt $< -S --load-pass-plugin=$(ENZYME_DIR)/build/Enzyme/LLVMEnzyme-16.dylib -passes=enzyme -o $@ 
+	$(LLVM_INSTALL_DIR)/bin/opt $< -S --load-pass-plugin=$(ENZYME_DIR)/build/Enzyme/LLVMEnzyme-16.dylib -passes=enzyme -o $@ 
 
 # Optimize Enzyme output and compile
 norm.o: norm_enzyme.ll

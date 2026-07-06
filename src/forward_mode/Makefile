@@ -9,7 +9,7 @@ forward_mode.ll: forward_mode.c forward_mode.h
 
 # Apply Enzyme plugin to LLVM IR
 forward_mode_enzyme.ll: forward_mode.ll
-	$(LLVM_DIR)/bin/opt $< -S --load-pass-plugin=$(ENZYME_DIR)/build/Enzyme/LLVMEnzyme-16.dylib -passes=enzyme -o $@ 
+	$(LLVM_INSTALL_DIR)/bin/opt $< -S --load-pass-plugin=$(ENZYME_DIR)/build/Enzyme/LLVMEnzyme-$(LLVM_VERSION).$(ENZYME_PLUGIN_EXT) -passes=enzyme -o $@ 
 
 # Optimize Enzyme output and compile
 forward_mode.o: forward_mode_enzyme.ll

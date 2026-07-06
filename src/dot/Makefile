@@ -9,7 +9,7 @@ dot.ll: dot.c dot.h
 
 # Apply Enzyme plugin to LLVM IR
 dot_enzyme.ll: dot.ll
-	$(LLVM_DIR)/bin/opt $< -S --load-pass-plugin=$(ENZYME_DIR)/build/Enzyme/LLVMEnzyme-16.dylib -passes=enzyme -o $@ 
+	$(LLVM_INSTALL_DIR)/bin/opt $< -S --load-pass-plugin=$(ENZYME_DIR)/build/Enzyme/LLVMEnzyme-$(LLVM_VERSION).$(ENZYME_PLUGIN_EXT) -passes=enzyme -o $@ 
 
 # Optimize Enzyme output and compile
 dot.o: dot_enzyme.ll

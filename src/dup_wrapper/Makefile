@@ -9,7 +9,7 @@ dup_wrapper.ll: dup_wrapper.c dup_wrapper.h
 
 # Apply Enzyme plugin to LLVM IR
 dup_wrapper_enzyme.ll: dup_wrapper.ll
-	$(LLVM_DIR)/bin/opt $< -S --load-pass-plugin=$(ENZYME_DIR)/build/Enzyme/LLVMEnzyme-16.dylib -passes=enzyme -o $@ 
+	$(LLVM_INSTALL_DIR)/bin/opt $< -S --load-pass-plugin=$(ENZYME_DIR)/build/Enzyme/LLVMEnzyme-$(LLVM_VERSION).$(ENZYME_PLUGIN_EXT) -passes=enzyme -o $@ 
 
 # Optimize Enzyme output and compile
 dup_wrapper.o: dup_wrapper_enzyme.ll
