@@ -1,15 +1,21 @@
 # gradient-harness
-C/C++ gradient harness for R&amp;D and testing of [EnzymeAD](https://github.com/EnzymeAD/).
+C/C++ code for R&amp;D and testing of [EnzymeAD](https://github.com/EnzymeAD/).
 
 # Build Instructions
 
-Each example can be built by running `make` from the source subdirectory (e.g. `gradient-harness/src/square`). The file `defs.mk` should updated to use your version of LLVM and Enzyme:
+Each example can be built by running `make` from the source subdirectory (e.g. `gradient-harness/src/square`). The build will attempt to locate LLVM based on the operating system, or you can manually set the location with the environment variables below: 
 
 ```
-# gradient-harness/src/defs.mk
-
-LLVM_DIR = <LLVM installation directory>
-ENZYME_DIR = <Enzyme installation directory>
+export LLVM_VERSION=<LLVM version>
+export LLVM_INSTALL_DIR=<LLVM install location>
 ```
 
-Note that Enzyme currently only supports up to LLVM version 16.
+Enzyme supports LLVM versions 12-16 and mainline currently.
+
+# Tests
+To run unit tests:
+
+```
+make pybind
+python -m unittest -v <test file>.py
+```

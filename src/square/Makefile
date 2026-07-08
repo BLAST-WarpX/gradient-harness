@@ -1,20 +1,7 @@
-include ../defs.mk
+EXEC = square
+OBJS = square
+PYBIND_OBJS = square
+PYBIND_MODULE = square
 
-.PHONY: all
-all: square.o 
+include ../base.mk
 
-# Generate LLVM IR
-square.ll: square.c square.h
-	$(CC) $< -S -emit-llvm -O2 -fno-vectorize -fno-slp-vectorize -fno-unroll-loops -o $@
-
-# Apply Enzyme plugin to LLVM IR
-square_enzyme.ll: square.ll
-	$(LLVM_INSTALL_DIR)/bin/opt $< -S --load-pass-plugin=$(ENZYME_DIR)/build/Enzyme/LLVMEnzyme-$(LLVM_VERSION).$(ENZYME_PLUGIN_EXT) -passes=enzyme -o $@ 
-
-# Optimize Enzyme output and compile
-square.o: square_enzyme.ll
-	$(CC) $< -O2 -o $@
-
-.PHONY: clean
-clean:
-	rm -f *.o *.ll
