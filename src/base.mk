@@ -8,15 +8,15 @@ SO_EXT = so
 # E.g. On Perlmutter: `module load python`
 CPYTHON_EXT = $(shell python3-config --extension-suffix)
 CPTHON_EXT ?= .cpython.so 
-PYTHON_C_COMP_FLAGS = -I../../extern/pybind11/include $(shell python3-config --includes)
-PYTHON_C_LINK_FLAGS = -shared
+PYBIND_CFLAGS = -I../../extern/pybind11/include $(shell python3-config --includes)
+PYBIND_LDFLAGS = -shared
 
 ## System specific logic
 UNAME = $(shell uname)
 
 ifeq ($(UNAME), Linux)
   # Linux
-  PYTHON_C_COMP_FLAGS += -fPIC
+  PYBIND_CFLAGS += -fPIC
  
   # Specific Linux distributions
   LINUX_DIST = $(shell lsb_release -is)
@@ -35,7 +35,7 @@ else ifeq ($(UNAME), Darwin)
   LD_NAME = ld64.lld
   SO_EXT = dylib
   
-  PYTHON_C_LINK_FLAGS += -shared -undefined dynamic_lookup
+  PYBIND_LDFLAGS += -shared -undefined dynamic_lookup
 endif
 
 ## System agnostic logic
@@ -60,6 +60,8 @@ endif
 ENZYME_CLANG_PLUGIN = $(ENZYME_DIR)/build/Enzyme/ClangEnzyme-$(LLVM_VERSION).$(SO_EXT)
 ENZYME_LLD_PLUGIN = $(ENZYME_DIR)/build/Enzyme/LLDEnzyme-$(LLVM_VERSION).$(SO_EXT)
 
+ENZYME_CFLAGS = -fplugin=$(ENZYME_CLANG_PLUGIN) 
+ENZYME_LDFLAGS = -fuse-ld=$(LD) -flto -Wl,-mllvm -Wl,-load=$(ENZYME_LLD_PLUGIN) -Wl,--load-pass-plugin=$(ENZYME_LLD_PLUGIN) 
 
 ### Builtin rules
 # Should define these variables in child Makefile
@@ -68,40 +70,40 @@ ENZYME_LLD_PLUGIN = $(ENZYME_DIR)/build/Enzyme/LLDEnzyme-$(LLVM_VERSION).$(SO_EX
 #   PYBIND_MODULE = name of pybind module
 #   PYBIND_OBJS = list of files with pybind11 bindings
 
-OBJ_FILES = $(addsuffix .o, $(OBJS))
-
 .PHONY: clean pybind
+
+OBJ_FILES = $(addsuffix .o, $(OBJS))
 
 ifdef EXEC
 $(EXEC): $(OBJ_FILES)
-	$(CXX) -fuse-ld=$(LD) -flto -Wl,-mllvm -Wl,-load=$(ENZYME_LLD_PLUGIN) -Wl,--load-pass-plugin=$(ENZYME_LLD_PLUGIN) $^ -o $(EXEC)
+	$(CXX) $(ENZYME_LDFLAGS) $^ -o $(EXEC)
 endif
 
 %.o: %.cpp %.h
-	$(CXX) -fplugin=$(ENZYME_CLANG_PLUGIN) -c $< -o $@
+	$(CXX) $(ENZYME_CFLAGS) -c $< -o $@
 
-%.o: %.cpp %.h
-	$(CXX) -fplugin=$(ENZYME_CLANG_PLUGIN) -c $< -o $@
+%.o: %.cpp
+	$(CXX) $(ENZYME_CFLAGS) -c $< -o $@
 
 # pybind11 rules
 ifdef PYBIND_OBJS
 PYBIND_OBJ_FILES = $(addsuffix _pybind.o,$(PYBIND_OBJS))
 
 pybind: $(OBJ_FILES) $(PYBIND_OBJ_FILES)
-	$(CXX) -fplugin=$(ENZYME_CLANG_PLUGIN) $(PYTHON_C_LINK_FLAGS) $^ -o  $(PYBIND_MODULE)$(CPYTHON_EXT)
+	$(CXX) $(PYBIND_LDFLAGS) $^ -o  $(PYBIND_MODULE)$(CPYTHON_EXT)
 
 %_pybind.o: %_pybind.cpp
-	$(CXX) $(PYTHON_C_COMP_FLAGS) -c $< -o $@
+	$(CXX) $(PYBIND_CFLAGS) -c $< -o $@
 endif
 
 # TODO: Should move all examples to C++ so we can use pybind11
 %.o: %.c %.h
-	$(CC) -flto -fplugin=$(ENZYME_CLANG_PLUGIN) -c $< -o $@
+	$(CC) $(ENZYME_CFLAGS) -c $< -o $@
 
 clean:
 	rm -f *.o *.ll	
 	rm -f $(EXEC)
-	rm -rf *$(CPYTHON_EXT)
+	rm -f *$(CPYTHON_EXT)
 	rm -rf __pycache__
 
 print-%:
