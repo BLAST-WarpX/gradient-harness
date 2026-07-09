@@ -60,7 +60,7 @@ endif
 ENZYME_CLANG_PLUGIN = $(ENZYME_DIR)/build/Enzyme/ClangEnzyme-$(LLVM_VERSION).$(SO_EXT)
 ENZYME_LLD_PLUGIN = $(ENZYME_DIR)/build/Enzyme/LLDEnzyme-$(LLVM_VERSION).$(SO_EXT)
 
-ENZYME_CFLAGS = -fplugin=$(ENZYME_CLANG_PLUGIN) 
+ENZYME_CFLAGS = -flto # -fplugin=$(ENZYME_CLANG_PLUGIN) 
 ENZYME_LDFLAGS = -fuse-ld=$(LD) -flto -Wl,-mllvm -Wl,-load=$(ENZYME_LLD_PLUGIN) -Wl,--load-pass-plugin=$(ENZYME_LLD_PLUGIN) 
 
 ### Builtin rules
