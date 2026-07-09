@@ -10,10 +10,19 @@ export LLVM_VERSION=<LLVM version>
 export LLVM_INSTALL_DIR=<LLVM install location>
 ```
 
-Enzyme supports LLVM versions 12-16 and mainline currently.
+On Perlmutter, load the llvm module before building: 
+```
+module load llvm/nightly
+```
 
 # Tests
-To run unit tests:
+On Perlmutter, load the python module before running the unit tests:
+
+```
+module load python
+```
+
+To run the unit tests:
 
 ```
 make pybind

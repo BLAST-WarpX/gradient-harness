@@ -1,5 +1,4 @@
-#include <stdio.h>
-#include <stdlib.h>
+#include <iostream>
 
 #include "square.h"
 
@@ -14,14 +13,10 @@ double dsquare(double x) {
 }
 
 int main(int argc, char** argv) {
-    if (argc < 2) {
-        return 0;
-    }
+    double x = 3.5;
+    double dsq = dsquare(x);
 
-    double x = strtod(argv[1], NULL);
-    double dx = dsquare(x);
-
-    printf("%f\n", dx);
+    std::cout << "dsquare=" << dsq << "\n";
     
     return 0;
 }
