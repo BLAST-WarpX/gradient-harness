@@ -1,6 +1,12 @@
 # gradient-harness
 C/C++ code for R&amp;D and testing of [EnzymeAD](https://github.com/EnzymeAD/).
 
+# Cloning
+```
+git clone git@github.com:BLAST-WarpX/gradient-harness
+git submodule update --init extern/
+```
+
 # Build Instructions
 
 Each example can be built by running `make` from the source subdirectory (e.g. `gradient-harness/src/square`). The build will attempt to locate LLVM based on the operating system, or you can manually set the location with the environment variables below: 
