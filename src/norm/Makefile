@@ -3,5 +3,5 @@ OBJS = norm
 #PYBIND_OBJS = norm
 #PYBIND_MODULE = norm
 
-include ../base.mk
-
+include ../defs.mk
+include ../rules.mk

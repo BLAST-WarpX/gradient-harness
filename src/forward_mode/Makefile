@@ -3,5 +3,5 @@ OBJS = forward_mode
 #PYBIND_OBJS = forward_mode
 #PYBIND_MODULE = forward_mode
 
-include ../base.mk
-
+include ../defs.mk
+include ../rules.mk
