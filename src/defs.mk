@@ -42,6 +42,19 @@ else ifeq ($(UNAME), Darwin)
   
   PYBIND_LDFLAGS += -shared -undefined dynamic_lookup
 endif
+ 
+# LLVM_VERSION and LLVM_DIR should be set as environment variables,
+# or we assume 
+ifndef LLVM_DIR
+  # User didn't provide LLVM_DIR, use compilers/linkers in PATH
+  CC = clang
+  CXX = clang++
+  LD = lld
+else
+  CC = $(LLVM_DIR)/bin/clang
+  CXX = $(LLVM_DIR)/bin/clang++
+  LD = $(LLVM_DIR)/bin/$(LD_NAME)
+endif
 
 ENZYME_CLANG_PLUGIN = $(ENZYME_DIR)/build/Enzyme/ClangEnzyme-$(LLVM_VERSION).$(SO_EXT)
 ENZYME_LLD_PLUGIN = $(ENZYME_DIR)/build/Enzyme/LLDEnzyme-$(LLVM_VERSION).$(SO_EXT)

@@ -8,19 +8,6 @@
 .PHONY: clean pybind
 
 OBJ_FILES = $(addsuffix .o, $(OBJS))
- 
-# LLVM_VERSION and LLVM_DIR should be set as environment variables,
-# or we assume 
-ifndef LLVM_DIR
-  # User didn't provide LLVM_DIR, use compilers/linkers in PATH
-  CC = clang
-  CXX = clang++
-  LD = lld
-else
-  CC = $(LLVM_DIR)/bin/clang
-  CXX = $(LLVM_DIR)/bin/clang++
-  LD = $(LLVM_DIR)/bin/$(LD_NAME)
-endif
 
 ifdef EXEC
 $(EXEC): $(OBJ_FILES)

@@ -26,8 +26,11 @@ INCLUDE_LOCATIONS += .
 ifeq ($(ENZYME), TRUE)
   CXXFLAGS += -DENZYME
   CXXFLAGS += $(ENZYME_CXXFLAGS)
-  LDFLAGS += $(ENZYME_LLDFLAGS)
+  LDFLAGS += $(ENZYME_LDFLAGS)
 endif
+
+# Verbose linker output
+#LDFLAGS += -Wl,-v
 
 include $(AMREX_HOME)/Src/Base/Make.package
 
