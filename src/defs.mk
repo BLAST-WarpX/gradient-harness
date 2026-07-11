@@ -59,7 +59,9 @@ endif
 ENZYME_CLANG_PLUGIN = $(ENZYME_DIR)/build/Enzyme/ClangEnzyme-$(LLVM_VERSION).$(SO_EXT)
 ENZYME_LLD_PLUGIN = $(ENZYME_DIR)/build/Enzyme/LLDEnzyme-$(LLVM_VERSION).$(SO_EXT)
 
-ENZMYE_CFLAGS = -flto
-ENZYME_CXXFLAGS = -flto
+ENZYME_CXXFLAGS = -flto -fpass-plugin=$(ENZYME_CLANG_PLUGIN) -mllvm --enzyme-enable=0
 ENZYME_LDFLAGS = -fuse-ld=$(LD) -flto -Wl,-mllvm -Wl,-load=$(ENZYME_LLD_PLUGIN) -Wl,--load-pass-plugin=$(ENZYME_LLD_PLUGIN) 
+
+# For now keep C and CXX the same 
+ENZMYE_CFLAGS = $(ENZYME_CXXFLAGS)
 
