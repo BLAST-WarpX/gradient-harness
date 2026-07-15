@@ -3,80 +3,65 @@
 
 #include <iostream>
 
+using namespace amrex;
+
 #ifdef ENZYME
-double __enzyme_autodiff(void*, double);
+extern int enzyme_out, enzyme_const, enzyme_dup;
+template <typename RT, typename... T>
+RT __enzyme_autodiff(void*, T...);
 #endif
 
-double run_simulation(double initial_radius);
-
-using namespace amrex;
+double run_simulation(double initial_radius, BoxArray ba, Geometry geom, GpuArray<Real, AMREX_SPACEDIM> dx, Real dt, DistributionMapping dm, int Ncomp, int Nghost, int nsteps);
 
 int main (int argc, char* argv[])
 {
     amrex::Initialize(argc,argv);
 
-    double initial_radius = 0.1;
-
-#ifdef ENZYME
-    double davg_final_temp = __enzyme_autodiff((void*) run_simulation, initial_radius);
-    std::cout << "d(avg_final_temp)/d(initial_radius) = " << davg_final_temp << "\n";
-#else
-    run_simulation(initial_radius);
-#endif
-
-    amrex::Finalize();
-    return 0;
-}
-
-double run_simulation(double initial_radius)
-{
-    double avg_final_temp = 0.0;
-    double *avg_final_temp_ptr = &avg_final_temp;
-
+    // For now disable parameter parsing
     // **********************************
     // SIMULATION PARAMETERS
 
     // number of cells on each side of the domain
-    int n_cell;
+    int n_cell = 32;
 
     // size of each box (or grid)
-    int max_grid_size;
+    int max_grid_size = 16;
 
     // total steps in simulation
-    int nsteps;
+    int nsteps = 1000;
 
     // how often to write a plotfile
-    int plot_int;
+    int plot_int = 100;
 
     // time step
-    Real dt;
+    Real dt = 1.e-5;
 
     // inputs parameters
-    {
-        // ParmParse is way of reading inputs from the inputs file
-        // pp.get means we require the inputs file to have it
-        // pp.query means we optionally need the inputs file to have it - but we must supply a default here
-        ParmParse pp;
+    //{
+    //    // ParmParse is way of reading inputs from the inputs file
+    //    // pp.get means we require the inputs file to have it
+    //    // pp.query means we optionally need the inputs file to have it - but we must supply a default here
+    //    ParmParse pp;
 
-        // We need to get n_cell from the inputs file - this is the number of cells on each side of
-        //   a square (or cubic) domain.
-        pp.get("n_cell",n_cell);
+    //    // We need to get n_cell from the inputs file - this is the number of cells on each side of
+    //    //   a square (or cubic) domain.
+    //    pp.get("n_cell",n_cell);
 
-        // The domain is broken into boxes of size max_grid_size
-        pp.get("max_grid_size",max_grid_size);
+    //    // The domain is broken into boxes of size max_grid_size
+    //    pp.get("max_grid_size",max_grid_size);
 
-        // Default nsteps to 10, allow us to set it to something else in the inputs file
-        nsteps = 10;
-        pp.query("nsteps",nsteps);
+    //    // Default nsteps to 10, allow us to set it to something else in the inputs file
+    //    nsteps = 10;
+    //    pp.query("nsteps",nsteps);
 
-        // Default plot_int to -1, allow us to set it to something else in the inputs file
-        //  If plot_int < 0 then no plot files will be written
-        plot_int = -1;
-        pp.query("plot_int",plot_int);
+    //    // Default plot_int to -1, allow us to set it to something else in the inputs file
+    //    //  If plot_int < 0 then no plot files will be written
+    //    plot_int = -1;
+    //    pp.query("plot_int",plot_int);
 
-        // time step
-        pp.get("dt",dt);
-    }
+    //    // time step
+    //    pp.get("dt",dt);
+    //}
 
     // **********************************
     // SIMULATION SETUP
@@ -123,12 +108,31 @@ double run_simulation(double initial_radius)
     // How Boxes are distrubuted among MPI processes
     DistributionMapping dm(ba);
 
+    double initial_radius = 0.1;
+
+#ifdef ENZYME
+   double dinitial_radius = __enzyme_autodiff<double>((void*) run_simulation, enzyme_out, initial_radius, 
+            enzyme_const, ba, enzyme_const, geom, enzyme_const, dx, enzyme_const, dt, 
+            enzyme_const, dm, enzyme_const, Ncomp, enzyme_const, Nghost, enzyme_const, nsteps);
+#else
+    run_simulation(initial_radius, ba, geom, dx, dt, dm, Ncomp, Nghost, nsteps);
+#endif
+
+    amrex::Finalize();
+    return 0;
+}
+
+double run_simulation(double initial_radius, BoxArray ba, Geometry geom, GpuArray<Real, AMREX_SPACEDIM> dx, Real dt, DistributionMapping dm, int Ncomp, int Nghost, int nsteps)
+{ 
     // we allocate two phi multifabs; one will store the old state, the other the new.
     MultiFab phi_old(ba, dm, Ncomp, Nghost);
     MultiFab phi_new(ba, dm, Ncomp, Nghost);
 
     // time = starting time in the simulation
     Real time = 0.0;
+
+    double avg_final_temp = 0.0;
+    double *avg_final_temp_ptr = &avg_final_temp;
 
     // **********************************
     // INITIALIZE DATA
@@ -151,17 +155,17 @@ double run_simulation(double initial_radius)
             Real z= (k+0.5) * dx[2];
             Real rsquared = ((x-0.5)*(x-0.5)+(y-0.5)*(y-0.5)+(z-0.5)*(z-0.5));
 #endif
-            phiOld(i,j,k) = 1. + std::exp(-rsquared / (initial_radius*initial_radius));
+            phiOld(i,j,k) = 1. + (rsquared < initial_radius*initial_radius);
         });
     }
 
     // Write a plotfile of the initial data if plot_int > 0
-    if (plot_int > 0)
-    {
-        int step = 0;
-        const std::string& pltfile = amrex::Concatenate("plt",step,5);
-        WriteSingleLevelPlotfile(pltfile, phi_old, {"phi"}, geom, time, 0);
-    }
+    //if (plot_int > 0)
+    //{
+    //    int step = 0;
+    //    const std::string& pltfile = amrex::Concatenate("plt",step,5);
+    //    WriteSingleLevelPlotfile(pltfile, phi_old, {"phi"}, geom, time, 0);
+    //}
 
     for (int step = 1; step <= nsteps; ++step)
     {
@@ -197,30 +201,30 @@ double run_simulation(double initial_radius)
         MultiFab::Copy(phi_old, phi_new, 0, 0, 1, 0);
 
         // Tell the I/O Processor to write out which step we're doing
-        amrex::Print() << "Advanced step " << step << "\n";
+        //amrex::Print() << "Advanced step " << step << "\n";
 
         // Write a plotfile of the current data (plot_int was defined in the inputs file)
-        if (plot_int > 0 && step%plot_int == 0)
-        {
-            const std::string& pltfile = amrex::Concatenate("plt",step,5);
-            WriteSingleLevelPlotfile(pltfile, phi_new, {"phi"}, geom, time, step);
-        }
+        //if (plot_int > 0 && step%plot_int == 0)
+        //{
+        //    const std::string& pltfile = amrex::Concatenate("plt",step,5);
+        //    WriteSingleLevelPlotfile(pltfile, phi_new, {"phi"}, geom, time, step);
+        //}
     }
 
 
-    for (MFIter mfi(phi_old); mfi.isValid(); ++mfi)
-    {
-        const Box& bx = mfi.validbox();
+    //for (MFIter mfi(phi_old); mfi.isValid(); ++mfi)
+    //{
+    //    const Box& bx = mfi.validbox();
 
-        const Array4<Real>& phiOld = phi_old.array(mfi);
+    //    const Array4<Real>& phiOld = phi_old.array(mfi);
 
-        amrex::ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k)
-        {
-            *avg_final_temp_ptr += phiOld(i, j, k);
-        });
-    }
+    //    amrex::ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k)
+    //    {
+    //        *avg_final_temp_ptr += phiOld(i, j, k);
+    //    });
+    //}
 
-    avg_final_temp /= geom.Domain().numPts();
+    //avg_final_temp /= geom.Domain().numPts();
 
     return avg_final_temp;
 }

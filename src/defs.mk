@@ -2,7 +2,7 @@
 
 # Update this if you are using a different LLVM version, or use an environment variable
 # E.g. export LLVM_VERSION = <your version>
-LLVM_VERSION ?= 23
+LLVM_VERSION ?= 21
 
 LD_NAME = ld.lld
 
@@ -59,9 +59,25 @@ endif
 ENZYME_CLANG_PLUGIN = $(ENZYME_DIR)/build/Enzyme/ClangEnzyme-$(LLVM_VERSION).$(SO_EXT)
 ENZYME_LLD_PLUGIN = $(ENZYME_DIR)/build/Enzyme/LLDEnzyme-$(LLVM_VERSION).$(SO_EXT)
 
-ENZYME_CXXFLAGS = -flto -fpass-plugin=$(ENZYME_CLANG_PLUGIN) -mllvm --enzyme-enable=0
-ENZYME_LDFLAGS = -fuse-ld=$(LD) -flto -Wl,-mllvm -Wl,-load=$(ENZYME_LLD_PLUGIN) -Wl,--load-pass-plugin=$(ENZYME_LLD_PLUGIN) 
+
+ENZYME_CXXFLAGS = -flto
+ENZYME_CXXFLAGS += -fplugin=$(ENZYME_CLANG_PLUGIN)
+ENZYME_CXXFLAGS += -mllvm -enzyme-enable=0
+#ENZYME_CXXFLAGS += -mllvm --enzyme-print=1
+
+ENZYME_LDFLAGS = -fuse-ld=$(LD) -flto -Wl,-mllvm,-load=$(ENZYME_LLD_PLUGIN) -Wl,--load-pass-plugin=$(ENZYME_LLD_PLUGIN) 
+ENZYME_LDFLAGS += -Wl,--lto-O1
+ENZYME_LDFLAGS += -Wl,-v
+#ENZYME_LDFLAGS += -Wl,-mllvm,-enzyme-print=1
+#ENZYME_LDFLAGS += -Wl,-mllvm,-enzyme-print-activity=1
+#ENZYME_LDFLAGS += -Wl,-mllvm,-enzyme-globals-default-inactive=1
+#ENZYME_LDFLAGS += -fplugin=$(ENZYME_CLANG_PLUGIN)
+
 
 # For now keep C and CXX the same 
-ENZMYE_CFLAGS = $(ENZYME_CXXFLAGS)
+#ENZMYE_CFLAGS = $(ENZYME_CXXFLAGS)
+
+# Rule: print contents of Makefile variable
+print-%:
+	@echo '$*=$($*)'
 

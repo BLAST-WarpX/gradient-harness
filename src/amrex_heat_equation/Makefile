@@ -12,10 +12,15 @@ COMP         = llvm  # Note: on Perlmutter, need llvm loaded
 DIM          = 2
 
 ENZYME       = FALSE
-LLVM_VERSION = 23
 
 include $(AMREX_HOME)/Tools/GNUMake/Make.defs
 include ../defs.mk
+
+# Need to set compilers here, otherwise the AMReX makefiles override
+CC = clang
+CXX = clang++
+FC = gfortran
+F90 = gfortran
 
 CEXE_sources += main.cpp
 CEXE_headers += myfunc.h
@@ -28,9 +33,6 @@ ifeq ($(ENZYME), TRUE)
   CXXFLAGS += $(ENZYME_CXXFLAGS)
   LDFLAGS += $(ENZYME_LDFLAGS)
 endif
-
-# Verbose linker output
-#LDFLAGS += -Wl,-v
 
 include $(AMREX_HOME)/Src/Base/Make.package
 
