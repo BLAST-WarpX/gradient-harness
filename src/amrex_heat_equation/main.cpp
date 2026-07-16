@@ -11,12 +11,21 @@ template <typename RT, typename... T>
 RT __enzyme_autodiff(void*, T...);
 #endif
 
-double run_simulation(double initial_radius, BoxArray ba, Geometry geom, GpuArray<Real, AMREX_SPACEDIM> dx, Real dt, DistributionMapping dm, int Ncomp, int Nghost, int nsteps);
+double run_simulation(double initial_radius, BoxArray ba, Geometry geom, GpuArray<Real, AMREX_SPACEDIM> dx, Real dt, DistributionMapping dm, int Ncomp, int Nghost, int nsteps, MultiFab *phi_old, MultiFab *phi_new);
+
+void main_main();
 
 int main (int argc, char* argv[])
 {
     amrex::Initialize(argc,argv);
+    
+    main_main();
 
+    amrex::Finalize();
+    return 0;
+}
+
+void main_main() {
     // For now disable parameter parsing
     // **********************************
     // SIMULATION PARAMETERS
@@ -110,24 +119,22 @@ int main (int argc, char* argv[])
 
     double initial_radius = 0.1;
 
-#ifdef ENZYME
-   double dinitial_radius = __enzyme_autodiff<double>((void*) run_simulation, enzyme_out, initial_radius, 
-            enzyme_const, ba, enzyme_const, geom, enzyme_const, dx, enzyme_const, dt, 
-            enzyme_const, dm, enzyme_const, Ncomp, enzyme_const, Nghost, enzyme_const, nsteps);
-#else
-    run_simulation(initial_radius, ba, geom, dx, dt, dm, Ncomp, Nghost, nsteps);
-#endif
-
-    amrex::Finalize();
-    return 0;
-}
-
-double run_simulation(double initial_radius, BoxArray ba, Geometry geom, GpuArray<Real, AMREX_SPACEDIM> dx, Real dt, DistributionMapping dm, int Ncomp, int Nghost, int nsteps)
-{ 
     // we allocate two phi multifabs; one will store the old state, the other the new.
     MultiFab phi_old(ba, dm, Ncomp, Nghost);
     MultiFab phi_new(ba, dm, Ncomp, Nghost);
 
+#ifdef ENZYME
+   double dinitial_radius = __enzyme_autodiff<double>((void*) run_simulation, enzyme_out, initial_radius, 
+            enzyme_const, ba, enzyme_const, geom, enzyme_const, dx, enzyme_const, dt, 
+            enzyme_const, dm, enzyme_const, Ncomp, enzyme_const, Nghost, enzyme_const, nsteps,
+            enzyme_const, &phi_old, enzyme_const, &phi_new);
+#else
+   run_simulation(initial_radius, ba, geom, dx, dt, dm, Ncomp, Nghost, nsteps, &phi_old, &phi_new);
+#endif
+}
+
+double run_simulation(double initial_radius, BoxArray ba, Geometry geom, GpuArray<Real, AMREX_SPACEDIM> dx, Real dt, DistributionMapping dm, int Ncomp, int Nghost, int nsteps, MultiFab *phi_old, MultiFab *phi_new)
+{ 
     // time = starting time in the simulation
     Real time = 0.0;
 
@@ -138,13 +145,14 @@ double run_simulation(double initial_radius, BoxArray ba, Geometry geom, GpuArra
     // INITIALIZE DATA
 
     // loop over boxes
-    for (MFIter mfi(phi_old); mfi.isValid(); ++mfi)
+    for (MFIter mfi(*phi_old); mfi.isValid(); ++mfi)
     {
         const Box& bx = mfi.validbox();
 
-        const Array4<Real>& phiOld = phi_old.array(mfi);
+        const Array4<Real>& phiOld = phi_old->array(mfi);
 
         // set phi = 1 + e^(-(r-0.5)^2)
+        /*
         amrex::ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k)
         {
             Real x = (i+0.5) * dx[0];
@@ -156,7 +164,7 @@ double run_simulation(double initial_radius, BoxArray ba, Geometry geom, GpuArra
             Real rsquared = ((x-0.5)*(x-0.5)+(y-0.5)*(y-0.5)+(z-0.5)*(z-0.5));
 #endif
             phiOld(i,j,k) = 1. + (rsquared < initial_radius*initial_radius);
-        });
+        });*/
     }
 
     // Write a plotfile of the initial data if plot_int > 0
@@ -167,19 +175,20 @@ double run_simulation(double initial_radius, BoxArray ba, Geometry geom, GpuArra
     //    WriteSingleLevelPlotfile(pltfile, phi_old, {"phi"}, geom, time, 0);
     //}
 
+    /*
     for (int step = 1; step <= nsteps; ++step)
     {
         // fill periodic ghost cells
-        phi_old.FillBoundary(geom.periodicity());
+        phi_old->FillBoundary(geom.periodicity());
 
         // new_phi = old_phi + dt * Laplacian(old_phi)
         // loop over boxes
-        for ( MFIter mfi(phi_old); mfi.isValid(); ++mfi )
+        for ( MFIter mfi(*phi_old); mfi.isValid(); ++mfi )
         {
             const Box& bx = mfi.validbox();
 
-            const Array4<Real>& phiOld = phi_old.array(mfi);
-            const Array4<Real>& phiNew = phi_new.array(mfi);
+            const Array4<Real>& phiOld = phi_old->array(mfi);
+            const Array4<Real>& phiNew = phi_new->array(mfi);
 
             // advance the data by dt
             amrex::ParallelFor(bx, [=] AMREX_GPU_DEVICE (int i, int j, int k)
@@ -198,7 +207,7 @@ double run_simulation(double initial_radius, BoxArray ba, Geometry geom, GpuArra
         time = time + dt;
 
         // copy new solution into old solution
-        MultiFab::Copy(phi_old, phi_new, 0, 0, 1, 0);
+        MultiFab::Copy(*phi_old, *phi_new, 0, 0, 1, 0);
 
         // Tell the I/O Processor to write out which step we're doing
         //amrex::Print() << "Advanced step " << step << "\n";
@@ -210,7 +219,8 @@ double run_simulation(double initial_radius, BoxArray ba, Geometry geom, GpuArra
         //    WriteSingleLevelPlotfile(pltfile, phi_new, {"phi"}, geom, time, step);
         //}
     }
-
+    */
+    
 
     //for (MFIter mfi(phi_old); mfi.isValid(); ++mfi)
     //{
