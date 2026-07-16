@@ -138,18 +138,20 @@ double run_simulation(double initial_radius, BoxArray ba, Geometry geom, GpuArra
     // time = starting time in the simulation
     Real time = 0.0;
 
-    double avg_final_temp = 0.0;
-    double *avg_final_temp_ptr = &avg_final_temp;
+    double max_final_temp = 0.0;
+    double *max_final_temp_ptr = &max_final_temp;
+
+    MFIter mfi(*phi_old);
 
     // **********************************
     // INITIALIZE DATA
 
     // loop over boxes
-    for (MFIter mfi(*phi_old); mfi.isValid(); ++mfi)
-    {
-        const Box& bx = mfi.validbox();
+    //for (MFIter mfi(*phi_old); mfi.isValid(); ++mfi)
+    //{
+        //const Box& bx = mfi.validbox();
 
-        const Array4<Real>& phiOld = phi_old->array(mfi);
+        //const Array4<Real>& phiOld = phi_old->array(mfi);
 
         // set phi = 1 + e^(-(r-0.5)^2)
         /*
@@ -165,7 +167,7 @@ double run_simulation(double initial_radius, BoxArray ba, Geometry geom, GpuArra
 #endif
             phiOld(i,j,k) = 1. + (rsquared < initial_radius*initial_radius);
         });*/
-    }
+    //}
 
     // Write a plotfile of the initial data if plot_int > 0
     //if (plot_int > 0)
@@ -230,11 +232,11 @@ double run_simulation(double initial_radius, BoxArray ba, Geometry geom, GpuArra
 
     //    amrex::ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k)
     //    {
-    //        *avg_final_temp_ptr += phiOld(i, j, k);
+    //        if (phiOld(i,j,k) >= max_final_temp) {
+    //            *max_final_temp = phiOld(i,j,k);  
+    //        }
     //    });
     //}
 
-    //avg_final_temp /= geom.Domain().numPts();
-
-    return avg_final_temp;
+    return max_final_temp;
 }
