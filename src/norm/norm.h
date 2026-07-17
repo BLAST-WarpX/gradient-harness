@@ -1,9 +1,9 @@
 #ifndef NORM_H
 #define NORM_H
 
-struct d_norm_output {
-    double x;
-    double y;
+struct dnorm_output {
+    double dx;
+    double dy;
 };
 
 double norm(double x, double y);
