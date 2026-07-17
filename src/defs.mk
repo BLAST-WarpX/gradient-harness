@@ -59,23 +59,21 @@ endif
 ENZYME_CLANG_PLUGIN = $(ENZYME_DIR)/build/Enzyme/ClangEnzyme-$(LLVM_VERSION).$(SO_EXT)
 ENZYME_LLD_PLUGIN = $(ENZYME_DIR)/build/Enzyme/LLDEnzyme-$(LLVM_VERSION).$(SO_EXT)
 
-
-ENZYME_CXXFLAGS = -flto
-ENZYME_CXXFLAGS += -fplugin=$(ENZYME_CLANG_PLUGIN)
-ENZYME_CXXFLAGS += -mllvm -enzyme-enable=0
-#ENZYME_CXXFLAGS += -mllvm --enzyme-print=1
-
+# Default Enzyme flags. We run Enzyme only during linking. 
+# Adding the ClangEnzyme plugin to the compile step wih enzyme-enable=0 seems to be necessary
+# for the compiler to pick up on attributes like __attribute__((enzyme_inactive))
+ENZYME_CXXFLAGS = -flto -fplugin=$(ENZYME_CLANG_PLUGIN) -mllvm -enzyme-enable=0
 ENZYME_LDFLAGS = -fuse-ld=$(LD) -flto -Wl,-mllvm,-load=$(ENZYME_LLD_PLUGIN) -Wl,--load-pass-plugin=$(ENZYME_LLD_PLUGIN) 
-ENZYME_LDFLAGS += -Wl,--lto-O1
-ENZYME_LDFLAGS += -Wl,-v
+
+# Enzyme debugging options
+#ENZYME_LDFLAGS += -Wl,--lto-O1
 #ENZYME_LDFLAGS += -Wl,-mllvm,-enzyme-print=1
 #ENZYME_LDFLAGS += -Wl,-mllvm,-enzyme-print-activity=1
+#ENZYME_LDFLAGS += -Wl,-mllvm,-enzyme-print-type=1
 #ENZYME_LDFLAGS += -Wl,-mllvm,-enzyme-globals-default-inactive=1
-#ENZYME_LDFLAGS += -fplugin=$(ENZYME_CLANG_PLUGIN)
-
 
 # For now keep C and CXX the same 
-#ENZMYE_CFLAGS = $(ENZYME_CXXFLAGS)
+ENZMYE_CFLAGS = $(ENZYME_CXXFLAGS)
 
 # Rule: print contents of Makefile variable
 print-%:
