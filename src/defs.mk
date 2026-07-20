@@ -37,7 +37,15 @@ ifeq ($(UNAME), Linux)
 else ifeq ($(UNAME), Darwin)
   # macOS
   LLVM_INSTALL_DIR ?= $(shell brew --prefix)/opt/llvm@$(LLVM_VERSION_MAJOR)
-  LLD_INSTALL_DIR ?= $(shell brew --prefix)/opt/lld@$(LLVM_VERSION_MAJOR)
+
+  # On mac, brew installs lld with llvm@16
+  # TODO: other versions of llvm might install lld too
+  ifeq ($(LLVM_VERSION_MAJOR),16)
+    LLD_INSTALL_DIR ?= $(LLVM_INSTALL_DIR)
+  else
+    LLD_INSTALL_DIR ?= $(shell brew --prefix)/opt/lld@$(LLVM_VERSION_MAJOR)
+  endif
+
   LD_NAME = ld64.lld
   SO_EXT = dylib
   
