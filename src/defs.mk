@@ -28,10 +28,12 @@ ifeq ($(UNAME), Linux)
   ifeq ($(LINUX_DIST), SUSE)
     # SUSE (e.g. Perlmutter)
      
-    # On Perlmutter and other HPC platforms, we assume LLVM has been loaded with lmod
+    # On Perlmutter and other HPC platforms, LLVM can be loaded with lmod or installed with spack
+
+	# For lmod: load the llvm module for the version you're using
     # E.g. On Perlmutter: `module load llvm/nightly`
 
-    # Uncomment if using spack
+    # For spack: uncomment line below, or load llvm in a spack environment 
     #LLVM_INSTALL_DIR ?= $(shell spack location -i llvm@$(LLVM_VERSION_MAJOR))
   endif
 else ifeq ($(UNAME), Darwin)
