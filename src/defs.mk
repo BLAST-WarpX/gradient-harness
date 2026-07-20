@@ -1,8 +1,8 @@
 ### Global variables
 
 # Update this if you are using a different LLVM version, or use an environment variable
-# E.g. export LLVM_VERSION = <your version>
-LLVM_VERSION ?= 21
+# E.g. export LLVM_VERSION_MAJOR = <your version>
+LLVM_VERSION_MAJOR ?= 22
 
 LD_NAME = ld.lld
 
@@ -32,32 +32,38 @@ ifeq ($(UNAME), Linux)
     # E.g. On Perlmutter: `module load llvm/nightly`
 
     # Uncomment if using spack
-    #LLVM_DIR ?= $(shell spack location -i llvm@$(LLVM_VERSION))
+    #LLVM_INSTALL_DIR ?= $(shell spack location -i llvm@$(LLVM_VERSION_MAJOR))
   endif
 else ifeq ($(UNAME), Darwin)
   # macOS
-  LLVM_DIR ?= $(shell brew --prefix)/opt/llvm@$(LLVM_VERSION)
+  LLVM_INSTALL_DIR ?= $(shell brew --prefix)/opt/llvm@$(LLVM_VERSION_MAJOR)
+  LLD_INSTALL_DIR ?= $(shell brew --prefix)/opt/lld@$(LLVM_VERSION_MAJOR)
   LD_NAME = ld64.lld
   SO_EXT = dylib
   
   PYBIND_LDFLAGS += -shared -undefined dynamic_lookup
 endif
  
-# LLVM_VERSION and LLVM_DIR should be set as environment variables,
-# or we assume 
-ifndef LLVM_DIR
-  # User didn't provide LLVM_DIR, use compilers/linkers in PATH
+# LLVM_VERSION_MAJOR and LLVM_INSTALL_DIR should be set as environment variables,
+# or we assume they are in PATH
+ifndef LLVM_INSTALL_DIR
+  # User didn't provide LLVM_INSTALL_DIR, use compilers/linkers in PATH
   CC = clang
   CXX = clang++
   LD = lld
 else
-  CC = $(LLVM_DIR)/bin/clang
-  CXX = $(LLVM_DIR)/bin/clang++
-  LD = $(LLVM_DIR)/bin/$(LD_NAME)
+  CC = $(LLVM_INSTALL_DIR)/bin/clang
+  CXX = $(LLVM_INSTALL_DIR)/bin/clang++
+  
+  ifndef LLD_INSTALL_DIR
+    LD = lld 
+  else
+	LD = $(LLD_INSTALL_DIR)/bin/$(LD_NAME)
+  endif
 endif
 
-ENZYME_CLANG_PLUGIN = $(ENZYME_DIR)/build/Enzyme/ClangEnzyme-$(LLVM_VERSION).$(SO_EXT)
-ENZYME_LLD_PLUGIN = $(ENZYME_DIR)/build/Enzyme/LLDEnzyme-$(LLVM_VERSION).$(SO_EXT)
+ENZYME_CLANG_PLUGIN = $(ENZYME_DIR)/build/Enzyme/ClangEnzyme-$(LLVM_VERSION_MAJOR).$(SO_EXT)
+ENZYME_LLD_PLUGIN = $(ENZYME_DIR)/build/Enzyme/LLDEnzyme-$(LLVM_VERSION_MAJOR).$(SO_EXT)
 
 # Default Enzyme flags. We run Enzyme only during linking. 
 # Adding the ClangEnzyme plugin to the compile step wih enzyme-enable=0 seems to be necessary
