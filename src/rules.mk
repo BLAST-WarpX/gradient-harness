@@ -14,12 +14,6 @@ $(EXEC): $(OBJ_FILES)
 	$(CXX) $(ENZYME_LDFLAGS) $^ -o $(EXEC)
 endif
 
-%.o: %.cpp %.h
-	$(CXX) $(ENZYME_CXXFLAGS) -c $< -o $@
-
-%.o: %.cpp
-	$(CXX) $(ENZYME_CXXFLAGS) -c $< -o $@
-
 # pybind11 rules
 ifdef PYBIND_OBJS
 PYBIND_OBJ_FILES = $(addsuffix _pybind.o,$(PYBIND_OBJS))
@@ -28,8 +22,14 @@ pybind: $(OBJ_FILES) $(PYBIND_OBJ_FILES)
 	$(CXX) $(PYBIND_LDFLAGS) $^ -o  $(PYBIND_MODULE)$(CPYTHON_EXT)
 
 %_pybind.o: %_pybind.cpp
-	$(CXX) $(PYBIND_CFLAGS) -c $< -o $@
+	$(CXX) $(PYBIND_CXXFLAGS) -c $< -o $@
 endif
+
+%.o: %.cpp %.h
+	$(CXX) $(ENZYME_CXXFLAGS) -c $< -o $@
+
+%.o: %.cpp
+	$(CXX) $(ENZYME_CXXFLAGS) -c $< -o $@
 
 # TODO: Should move all examples to C++ so we can use pybind11
 %.o: %.c %.h

@@ -13,7 +13,7 @@ SO_EXT = so
 # E.g. On Perlmutter: `module load python`
 CPYTHON_EXT = $(shell python3-config --extension-suffix)
 CPTHON_EXT ?= .cpython.so 
-PYBIND_CFLAGS = -I../../extern/pybind11/include $(shell python3-config --includes)
+PYBIND_CXXFLAGS = -I../../extern/pybind11/include $(shell python3-config --includes)
 PYBIND_LDFLAGS = -shared
 
 ## System specific logic
@@ -21,7 +21,7 @@ UNAME = $(shell uname)
 
 ifeq ($(UNAME), Linux)
   # Linux
-  PYBIND_CFLAGS += -fPIC
+  PYBIND_CXXFLAGS += -fPIC
  
   # Specific Linux distributions
   LINUX_DIST = $(shell lsb_release -is)
@@ -31,7 +31,7 @@ ifeq ($(UNAME), Linux)
     # On Perlmutter and other HPC platforms, LLVM can be loaded with lmod or installed with spack
 
 	# For lmod: load the llvm module for the version you're using
-    # E.g. On Perlmutter: `module load llvm/nightly`
+   # E.g. On Perlmutter: `module load llvm/nightly`
 
     # For spack: uncomment line below, or load llvm in a spack environment 
     #LLVM_INSTALL_DIR ?= $(shell spack location -i llvm@$(LLVM_VERSION_MAJOR))
@@ -78,7 +78,7 @@ ENZYME_LLD_PLUGIN = $(ENZYME_DIR)/build/Enzyme/LLDEnzyme-$(LLVM_VERSION_MAJOR).$
 # Default Enzyme flags. We run Enzyme only during linking. 
 # Adding the ClangEnzyme plugin to the compile step wih enzyme-enable=0 seems to be necessary
 # for the compiler to pick up on attributes like __attribute__((enzyme_inactive))
-ENZYME_CXXFLAGS = -O3 -flto -fplugin=$(ENZYME_CLANG_PLUGIN) -mllvm -enzyme-enable=0
+ENZYME_CXXFLAGS = -O3 -std=c++20 -flto -fplugin=$(ENZYME_CLANG_PLUGIN) -mllvm -enzyme-enable=0
 ENZYME_LDFLAGS = -fuse-ld=$(LD) -flto -Wl,-mllvm,-load=$(ENZYME_LLD_PLUGIN) -Wl,--load-pass-plugin=$(ENZYME_LLD_PLUGIN) 
 
 # Enzyme debugging options
