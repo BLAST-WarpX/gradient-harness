@@ -1,14 +1,14 @@
 #include <cmath>
 
-extern int enzyme_const, enzyme_dup, enzyme_out;
+extern int enzyme_out, enzyme_const, enzyme_dup, enzyme_dupnoneed;
 
 template <typename RT, typename... T>
-RT __enzyme_autodiff(void*, T...);
+RT __enzyme_fwddiff(void*, T...);
 
 void quad_push (
     double & x, double & y, double & t,
     double & px, double & py, double const pt,
-    double k,
+    double const k,
     double const slice_ds,
     double const pt_ref
 )
@@ -70,19 +70,39 @@ void quad_push (
 }
 
 /**
- * Derivative of quad_push with respect to quadrupole strength k
- */
-double dquad_push_dk (
-    double * x, double * y, double * t,
-    double * px, double * py, double const pt,
-    double k,
+ * Dummy function to test dquad_push_dk
+ * Here the outputs [x, y, t, px, py] are known analytic functions of k
+ */ 
+void quad_push_dummy (
+    double & x, double & y, double & t,
+    double & px, double & py, double const pt,
+    double const k,
     double const slice_ds,
     double const pt_ref
 )
 {
-    return __enzyme_autodiff<double>((void*)quad_push,
-            enzyme_const, x, enzyme_const, y, enzyme_const, t,
-            enzyme_const, px, enzyme_const, py, enzyme_const, pt,
-            enzyme_out, k, enzyme_const, slice_ds, enzyme_const, pt_ref);
+    x = 2*k;
+    y = 3*k;
+    t = 4*k;
+    px = 5*k;
+    py = 6*k;
+}
+
+/**
+ * Derivative of quad_push with respect to quadrupole strength k
+ */
+void dquad_push_dk (
+    double x, double & dx, double y, double & dy, double t, double & dt,
+    double px, double & dpx, double py, double & dpy, double const pt,
+    double const k,
+    double const slice_ds,
+    double const pt_ref
+)
+{
+    double dk = 1.0;
+    __enzyme_fwddiff<void>((void*)quad_push,
+            enzyme_dupnoneed, &x, &dx, enzyme_dupnoneed, &y, &dy, enzyme_dupnoneed, &t, &dt,
+            enzyme_dupnoneed, &px, &dpx, enzyme_dupnoneed, &py, &dpy, enzyme_const, pt,
+            enzyme_dup, k, dk, enzyme_const, slice_ds, enzyme_const, pt_ref);
 }
 

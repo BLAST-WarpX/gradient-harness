@@ -29,11 +29,21 @@ void quad_push (
     double const slice_ds,
     double const pt_ref
 );
-
-double dquad_push_dk(double * x, double * y, double * t,
-    double * px, double * py, double const pt,
-    double k,
+ 
+void quad_push_dummy (
+    double & x, double & y, double & t,
+    double & px, double & py, double const pt,
+    double const k,
     double const slice_ds,
-    double const pt_ref);
+    double const pt_ref
+);
+
+void dquad_push_dk (
+    double x, double & dx, double y, double & dy, double t, double & dt,
+    double px, double & dpx, double py, double & dpy, double const pt,
+    double const k,
+    double const slice_ds,
+    double const pt_ref
+);
 
 #endif
