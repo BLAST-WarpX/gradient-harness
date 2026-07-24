@@ -3,23 +3,25 @@
 #include "quad_push.h"
 
 int main() {
-    double x = 0.0;
+    double x = 1.0;
     double dx = 0.0;
     double y = 0.0;
     double dy = 0.0;
     double t = 0.0;
     double dt = 0.0;
-    double px = 1.0;
+    double px = 0.0;
     double dpx = 0.0;
-    double py = 1.0;
+    double py = 0.0;
     double dpy = 0.0;
-    double pt = 1.0;
-    double k = 1.0;
+    double pt = 0.0;
+    double k = 0.0;
     double slice_ds = 1.0;
-    double pt_ref = 1.0;
+    double pt_ref = 3.0;
 
     // Stores Jacobian d[x, y, t, px, py]/dk in [dx, dy, dt, dpx, dpy]
     dquad_push_dk_enzyme(x, dx, y, dy, t, dt, px, dpx, py, dpy, pt, k, slice_ds, pt_ref);
+
+    //quad_push(x, y, t, px, py, pt, k, slice_ds, pt_ref);
 
     // Confirm dquad_push_dk doesn't change input variables
     std::cout << "x = " << x << "; " 
@@ -31,14 +33,6 @@ int main() {
         << "k = " << k << "; "
         << "slice_ds = " << slice_ds << "; "
         << "pt_ref = " << pt_ref << "\n";
-
-    std::cout << "dx = " << dx << "; "
-        << "dy = " << dy << "; "
-        << "dt = " << dt << "; "
-        << "dpx = " << dpx << "; "
-        << "dpy = " << dpy << "\n";
-
-    dquad_push_dk_analytic(x, dx, y, dy, t, dt, px, dpx, py, dpy, pt, k, slice_ds, pt_ref);
 
     std::cout << "dx = " << dx << "; "
         << "dy = " << dy << "; "

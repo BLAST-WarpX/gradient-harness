@@ -79,7 +79,7 @@ ENZYME_LLD_PLUGIN = $(ENZYME_DIR)/build/Enzyme/LLDEnzyme-$(LLVM_VERSION_MAJOR).$
 # Adding the ClangEnzyme plugin to the compile step wih enzyme-enable=0 seems to be necessary
 # for the compiler to pick up on attributes like __attribute__((enzyme_inactive))
 ENZYME_CXXFLAGS = -O3 -std=c++20 -flto -fplugin=$(ENZYME_CLANG_PLUGIN) -mllvm -enzyme-enable=0
-ENZYME_LDFLAGS = -fuse-ld=$(LD) -flto -Wl,-mllvm,-load=$(ENZYME_LLD_PLUGIN) -Wl,--load-pass-plugin=$(ENZYME_LLD_PLUGIN) 
+ENZYME_LDFLAGS = -fuse-ld=$(LD) -flto -Wl,-mllvm,-load=$(ENZYME_LLD_PLUGIN) -Wl,--load-pass-plugin=$(ENZYME_LLD_PLUGIN) -Wl,-mllvm,-enzyme-fast-math=0 
 
 # Enzyme debugging options
 #ENZYME_LDFLAGS += -Wl,--lto-O1

@@ -18,9 +18,13 @@ endif
 ifdef PYBIND_OBJS
 PYBIND_OBJ_FILES = $(addsuffix _pybind.o,$(PYBIND_OBJS))
 
+PYBIND_MODULE_FULL = $(PYBIND_MODULE)$(CPYTHON_EXT)
+
+pybind: $(PYBIND_MODULE_FULL)
+
 # Note: Because we run Enzyme at link time, we need to run Enzyme when linking pybind as well
-pybind: $(OBJ_FILES) $(PYBIND_OBJ_FILES)
-	$(CXX) $(ENZYME_LDFLAGS) $(PYBIND_LDFLAGS) $^ -o  $(PYBIND_MODULE)$(CPYTHON_EXT)
+$(PYBIND_MODULE_FULL): $(OBJ_FILES) $(PYBIND_OBJ_FILES)
+	$(CXX) $(ENZYME_LDFLAGS) $(PYBIND_LDFLAGS) $^ -o $@ 
 
 %_pybind.o: %_pybind.cpp
 	$(CXX) $(PYBIND_CXXFLAGS) -c $< -o $@
