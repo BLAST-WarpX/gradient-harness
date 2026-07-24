@@ -19,7 +19,7 @@ int main() {
     double pt_ref = 1.0;
 
     // Stores Jacobian d[x, y, t, px, py]/dk in [dx, dy, dt, dpx, dpy]
-    dquad_push_dk(x, dx, y, dy, t, dt, px, dpx, py, dpy, pt, k, slice_ds, pt_ref);
+    dquad_push_dk_enzyme(x, dx, y, dy, t, dt, px, dpx, py, dpy, pt, k, slice_ds, pt_ref);
 
     // Confirm dquad_push_dk doesn't change input variables
     std::cout << "x = " << x << "; " 
@@ -31,6 +31,14 @@ int main() {
         << "k = " << k << "; "
         << "slice_ds = " << slice_ds << "; "
         << "pt_ref = " << pt_ref << "\n";
+
+    std::cout << "dx = " << dx << "; "
+        << "dy = " << dy << "; "
+        << "dt = " << dt << "; "
+        << "dpx = " << dpx << "; "
+        << "dpy = " << dpy << "\n";
+
+    dquad_push_dk_analytic(x, dx, y, dy, t, dt, px, dpx, py, dpy, pt, k, slice_ds, pt_ref);
 
     std::cout << "dx = " << dx << "; "
         << "dy = " << dy << "; "
