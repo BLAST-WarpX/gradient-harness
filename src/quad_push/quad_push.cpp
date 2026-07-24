@@ -81,8 +81,8 @@ void quad_push_dummy (
 }
 
 void dquad_push_dk_enzyme (
-    double x, double & dx, double y, double & dy, double t, double & dt,
-    double px, double & dpx, double py, double & dpy, double const pt,
+    double const x, double & dx, double const y, double & dy, double const t, double & dt,
+    double const px, double & dpx, double const py, double & dpy, double const pt,
     double const k,
     double const slice_ds,
     double const pt_ref
@@ -96,8 +96,8 @@ void dquad_push_dk_enzyme (
 }
 
 void dquad_push_dk_analytic(
-    double x, double & dx, double y, double & dy, double t, double & dt,
-    double px, double & dpx, double py, double & dpy, double const pt,
+    double const x, double & dx, double const y, double & dy, double const t, double & dt,
+    double const px, double & dpx, double const py, double & dpy, double const pt,
     double const k,
     double const slice_ds,
     double const pt_ref
