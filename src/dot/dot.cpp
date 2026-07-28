@@ -4,15 +4,12 @@
 
 #include "dot.h"
 
-// Variables with these specific names are only used to pass
-// metadata to Enzyme
-int enzyme_const, enzyme_dup, enzyme_out;
+extern int enzyme_const, enzyme_dup, enzyme_out;
 
-double __enzyme_autodiff(void*, ...);
+template <typename RT, typename... T>
+RT __enzyme_autodiff(void*, T...);
 
-/**
- * Calculates u \dot v + c
- */
+// Calculates u \dot v + c
 double dot(int n, double* u, double* v, double c) {
     double dot_prod = 0.0;
 
@@ -25,8 +22,8 @@ double dot(int n, double* u, double* v, double c) {
 
 int main(int argc, char **argv) {
     int n = 3;
-    double *u = (double*) malloc(n * sizeof(double)); 
-    double *v = (double*) malloc(n * sizeof(double));
+    double *u = new double[n]; 
+    double *v = new double [n]; 
 
     u[0] = 1.0; u[1] = 2.0; u[2] = 3.0;
     v[0] = 10.0; v[1] = 4.0; v[2] = 15.0;
@@ -35,20 +32,14 @@ int main(int argc, char **argv) {
 
     // For variables passed by address, we construct shadow variables
     // to store gradients for Enzyme
-    double *d_u = (double*) malloc(n * sizeof(double));
-    double *d_v = (double*) malloc(n * sizeof(double));
+    double *d_u = new double[n]{};
+    double *d_v = new double[n]{};
 
-    // Zero initialize shadow variables
-    memset(d_u, 0.0, n * sizeof(double)); 
-    memset(d_v, 0.0, n * sizeof(double));
+    double d_c = 0.0;
 
-   double d_c = 0.0;
-
-    d_c = __enzyme_autodiff((void*) dot,
-                       enzyme_const, n,
-                       enzyme_dup, u, d_u,
-                       enzyme_dup, v, d_v,
-                       enzyme_out, c);
+    d_c = __enzyme_autodiff<double>((void*) dot,
+                enzyme_const, n, enzyme_dup, u, d_u,
+                enzyme_dup, v, d_v, enzyme_out, c);
 
     printf("u = {%f, %f, %f}\n", u[0], u[1], u[2]);
     printf("v = {%f, %f, %f}\n", v[0], v[1], v[2]);
