@@ -3,7 +3,11 @@
 extern int enzyme_out, enzyme_const, enzyme_dup, enzyme_dupnoneed;
 
 template <typename RT, typename... T>
-RT __enzyme_fwddiff(void*, T...);
+RT __enzyme_fwddiff(void*, T...); 
+
+static double quad_push_cos(double const k, double const L);
+static double quad_push_sinc(double const k, double const L);
+static double quad_push_osin(double const k, double const L);
 
 void quad_push (
     double & x, double & y, double & t,
@@ -65,7 +69,12 @@ void quad_push (
     py = pyout;
 }
 
-void quad_push_dummy (
+/**
+ * This version of quad_push uses versions of the singular function parts
+ * which are Taylor expanded near the origin, so Enzyme can pick up on the 
+ * derivative correctly.
+ */ 
+void quad_push_taylor (
     double & x, double & y, double & t,
     double & px, double & py, double const pt,
     double const k,
@@ -73,11 +82,78 @@ void quad_push_dummy (
     double const pt_ref
 )
 {
-    x = 2*k;
-    y = 3*k;
-    t = 4*k;
-    px = 5*k;
-    py = 6*k;
+    // beta*gamma^2 of the reference particle and the longitudinal slip factor
+    double const betgam2  = pt_ref * pt_ref - 1.0;
+    double const slice_bg = slice_ds / betgam2;
+
+    double const xout = quad_push_cos(k, slice_ds) * x + quad_push_sinc(k, slice_ds) * px;
+    double const pxout = quad_push_osin(k, slice_ds) * x + quad_push_cos(k, slice_ds) * px;
+    
+    double const yout = quad_push_cos(-k, slice_ds) * y + quad_push_sinc(-k, slice_ds) * py;
+    double const pyout = quad_push_osin(-k, slice_ds) * y + quad_push_cos(-k, slice_ds) * py; 
+
+    // longitudinal slip (independent of focusing sign); pt is invariant
+    double const tout = t + slice_bg * pt;
+
+    // write back
+    x  = xout;
+    y  = yout;
+    t  = tout;
+    px = pxout;
+    py = pyout;
+}
+
+/**
+ * quad_push_cos(k, L) = { cos(sqrt(k)),   k >= 0
+ *                       { cosh(sqrt(-k)), k < 0
+ * This function is real analytic in k, but the chain rule will give division by zero.
+ * We approximate around the origin with a Taylor expansion.
+ *
+ * Around k = 0:
+ * quad_push_cos(k, L) = 1 - (1/2!) L^2 * k + (1/4!) L^4 * k^2 - (1/6!) L^6 * k^3 + ...
+ */ 
+static double quad_push_cos(double const k, double const L) {
+    double const u = L*L*k;
+    if (std::fabs(u) < 1.0e0) 
+        return 1.0 - u/2.0; //+ u*u/24.0 - u*u*u/720.0;
+    double const w = L * std::sqrt(std::fabs(k));
+    return k > 0.0 ? std::cos(w) : std::cosh(w);
+}
+
+/**
+ * quad_push_sinc(k, L) = { sin(L*sqrt(k)) / sqrt(k),    k > 0
+ *                        { L,                           k = 0
+ *                        { sinh(L*sqrt(-k)) / sqrt(-k), k < 0
+ * This function is real analytic in k, but the piecewise condition at 0 will
+ * give zero gradient through autodiff.
+ * To avoid seeing zero derivative there, we use a Taylor expansion.
+ *
+ * Around k = 0:
+ * quad_push_sinc(k, L) = L - (1/3!) L * u + (1/5!) L^2 * u^2 - (1/7!) L^3 * u^3 + ... 
+ */
+static double quad_push_sinc(double const k, double const L) {
+    double const u = L*L*k;
+    if (std::fabs(u) < 1.0e0)
+        return L * (1.0 - u/6.0); // + u*u/120.0 - u*u*u/5040.0);
+    double const w = L * std::sqrt(std::fabs(k));
+    return k > 0.0 ? std::sin(w)/std::sqrt(k) : std::sinh(w)/std::sqrt(-k);
+}
+
+/**
+ * quad_push_osin(k, L) = { -sqrt(k)*sin(L*sqrt(k)),   k >= 0
+ *                        { sqrt(-k)*sinh(L*sqrt(-k)), k < 0
+ * This function is real analytic in k, but the chain rule will give division by zero.
+ * We approximate around the origin with a Taylor expansion.
+ *
+ * Around k = 0:
+ * quad_push_osin(k, L) = -L*k + (1/3!) L^3 * k^2 - (1/5!) L^5 * k^3 + (1/7!) L^7 * k^4 + ...
+ */ 
+static double quad_push_osin(double const k, double const L) {
+    double const u = L*L*k;
+    if (std::fabs(u) < 1.0e0)
+        return -L * k * (1.0); // - u/6.0 + u*u/120.0 - u*u*u/5040.0);
+    double const omega = std::sqrt(std::fabs(k));
+    return k >= 0.0 ? -omega*std::sin(L*omega) : omega*std::sinh(L*omega);
 }
 
 void dquad_push_dk_enzyme (
@@ -94,6 +170,22 @@ void dquad_push_dk_enzyme (
             enzyme_dupnoneed, &px, &dpx, enzyme_dupnoneed, &py, &dpy, enzyme_const, pt,
             enzyme_dup, k, dk, enzyme_const, slice_ds, enzyme_const, pt_ref);
 }
+
+void dquad_push_taylor_dk_enzyme (
+    double const x, double & dx, double const y, double & dy, double const t, double & dt,
+    double const px, double & dpx, double const py, double & dpy, double const pt,
+    double const k,
+    double const slice_ds,
+    double const pt_ref
+)
+{
+    double dk = 1.0;
+    __enzyme_fwddiff<void>((void*)quad_push_taylor,
+            enzyme_dupnoneed, &x, &dx, enzyme_dupnoneed, &y, &dy, enzyme_dupnoneed, &t, &dt,
+            enzyme_dupnoneed, &px, &dpx, enzyme_dupnoneed, &py, &dpy, enzyme_const, pt,
+            enzyme_dup, k, dk, enzyme_const, slice_ds, enzyme_const, pt_ref);
+}
+
 
 void dquad_push_dk_analytic(
     double const x, double & dx, double const y, double & dy, double const t, double & dt,

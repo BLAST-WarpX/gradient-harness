@@ -31,22 +31,31 @@ void quad_push (
 );
 
 /**
- * Dummy function to test dquad_push_dk
- * Here the outputs [x, y, t, px, py] are known analytic functions of k
+ * quad_push function with singular parts Taylor expanded near singularities
  */ 
-void quad_push_dummy (
+void quad_push_taylor (
     double & x, double & y, double & t,
     double & px, double & py, double const pt,
-    double const k,
+    double k,
     double const slice_ds,
     double const pt_ref
 );
-
 
 /**
  * Derivative of quad_push with respect to quadrupole strength k, using Enzyme
  */
 void dquad_push_dk_enzyme (
+    double x, double & dx, double y, double & dy, double t, double & dt,
+    double px, double & dpx, double py, double & dpy, double const pt,
+    double const k,
+    double const slice_ds,
+    double const pt_ref
+);
+
+/**
+ * Derivative of quad_push_taylor with respect to quadrupole strength k, using Enzyme
+ */
+void dquad_push_taylor_dk_enzyme (
     double x, double & dx, double y, double & dy, double t, double & dt,
     double px, double & dpx, double py, double & dpy, double const pt,
     double const k,
