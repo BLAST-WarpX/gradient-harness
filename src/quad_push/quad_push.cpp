@@ -114,8 +114,8 @@ void quad_push_taylor (
  */ 
 static double quad_push_cos(double const k, double const L) {
     double const u = L*L*k;
-    if (std::fabs(u) < 1.0e0) 
-        return 1.0 - u/2.0; //+ u*u/24.0 - u*u*u/720.0;
+    if (std::fabs(u) < 4.0e0) 
+        return 1.0 - u/2.0 + u*u/24.0 - u*u*u/720.0;
     double const w = L * std::sqrt(std::fabs(k));
     return k > 0.0 ? std::cos(w) : std::cosh(w);
 }
@@ -133,8 +133,8 @@ static double quad_push_cos(double const k, double const L) {
  */
 static double quad_push_sinc(double const k, double const L) {
     double const u = L*L*k;
-    if (std::fabs(u) < 1.0e0)
-        return L * (1.0 - u/6.0); // + u*u/120.0 - u*u*u/5040.0);
+    if (std::fabs(u) < 4.0e0)
+        return L * (1.0 - u/6.0 + u*u/120.0 - u*u*u/5040.0);
     double const w = L * std::sqrt(std::fabs(k));
     return k > 0.0 ? std::sin(w)/std::sqrt(k) : std::sinh(w)/std::sqrt(-k);
 }
@@ -150,8 +150,8 @@ static double quad_push_sinc(double const k, double const L) {
  */ 
 static double quad_push_osin(double const k, double const L) {
     double const u = L*L*k;
-    if (std::fabs(u) < 1.0e0)
-        return -L * k * (1.0); // - u/6.0 + u*u/120.0 - u*u*u/5040.0);
+    if (std::fabs(u) < 4.0e0)
+        return -L * k * (1.0 - u/6.0 + u*u/120.0 - u*u*u/5040.0);
     double const omega = std::sqrt(std::fabs(k));
     return k >= 0.0 ? -omega*std::sin(L*omega) : omega*std::sinh(L*omega);
 }
