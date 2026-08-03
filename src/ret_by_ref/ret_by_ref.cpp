@@ -1,6 +1,6 @@
 #include <iostream>
 
-extern int enzyme_out, enzyme_const, enzyme_dup;
+extern int enzyme_out, enzyme_const, enzyme_dup, enzyme_dupnoneed;
 
 template <typename RT, typename... T>
 RT __enzyme_autodiff(void*, T...);
@@ -49,10 +49,11 @@ int main() {
     // Forward mode example
     // Sets [dv, dw] = [dv/du, dw/du] * du 
     __enzyme_fwddiff<void>((void*)func2,
-            enzyme_dup, u, du, enzyme_dup, &v, &dv, enzyme_dup, &w, &dw);
+            enzyme_dup, u, du, enzyme_dupnoneed, &v, &dv, enzyme_dupnoneed, &w, &dw);
 
     std::cout << "Forward mode:\n";
     std::cout << "func2: dv/dv = " << dv << "; dw/du = " << dw << "\n";
+    std::cout << u << " " << v << " " << w << "\n";
 
     return 0;
 }
