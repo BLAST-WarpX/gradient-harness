@@ -64,8 +64,8 @@ ninja check-enzyme
 ```
 
 # Build Instructions
-
-Each example can be built by running `make` from the source subdirectory (e.g. `gradient-harness/src/square`). You will have to set the environment variable LLVM_VERSION_MAJOR to your version before building. 
+Each example can be built by running `make` from the source subdirectory (e.g. `gradient-harness/src/square`). You will have to set 
+the environment variable `LLVM_VERSION_MAJOR` to your version before building. 
 
 ```
 export LLVM_VERSION_MAJOR=<LLVM version>
@@ -86,7 +86,7 @@ This will automatically add the desired versions of clang/clang++ to your path.
 
 If you are using a spack virtual environment, activate the environment:
 ```
-SPACK_ENV_NAME=<your venv>
+SPACK_ENV_NAME=<env name>
 spack env activate ${SPACK_ENV_NAME}
 ```
 
@@ -102,7 +102,7 @@ make pybind
 python -m unittest -v <test file>.py
 ```
 
-# Perlmutter notes
+# Additional Perlmutter notes
 
 ## Spack virtual environments
 If you wish to test with a specific version of LLVM on Perlmutter which isn't available as a module, you will have to set up a spack
@@ -115,7 +115,7 @@ source ~/.bashrc
 
 Then create and activate the environment:
 ```
-export LLVM_VERSION_MAJOR=<version>
+export LLVM_VERSION_MAJOR=<llvm version>
 export SPACK_ENV_NAME=gradient-harness-llvm-${LLVM_VERSION_MAJOR}
 
 spack env create ${SPACK_ENV_NAME}
