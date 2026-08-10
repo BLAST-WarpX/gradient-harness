@@ -12,19 +12,23 @@ git submodule update --init extern/
 
 # Dependencies
 
+[pybind11](https://github.com/pybind/pybind11)
+
 [Enzyme](https://github.com/EnzymeAD/Enzyme/)
 
 [AMReX](https://github.com/amrex-codes/amrex)
 
-Currently AMReX is only needed for `amrex_heat_equation`.
+`pybind11` is packaged with `gradient-harness` as a git submodule. 
 
-To install dependencies:
+To install the other dependencies:
 
 ```
 cd ~/src
 git clone git@github.com:EnzymeAD/Enzyme.git
 git clone git@github.com:amrex-codes/amrex.git
 ```
+
+Currently AMReX is only needed for `amrex_heat_equation`.
 
 ## Building Enzyme
 Instructions to build Enzyme from the source are on the [Enzyme website](https://enzyme.mit.edu/Installation/). We state
