@@ -1,23 +1,24 @@
-##### Global variables ######
+######## Global variables #########
 
-# Update this if you are using a different LLVM version, or use an environment variable
-# export LLVM_VERSION_MAJOR=<your version>
-LLVM_VERSION_MAJOR ?= 22
-
-# If you have LLVM installed in a specific location, set the environment variable
+# Update or export LLVM_VERSION_MAJOR if you are using a different LLVM version.
+# If you have LLVM installed in a specific location, export the environment variable
 # LLVM_INSTALL_DIR.
-# export LLVM_INSTALL_DIR=<install location>
+LVM_VERSION_MAJOR ?= 21
 
 LD_NAME = ld.lld
 
 ENZYME_DIR = $(HOME)/src/Enzyme
 SO_EXT = so
 
-# On Perlmutter and other HPC platforms, the tests assume python is loaded
-# E.g. On Perlmutter: `module load python`
+# CUDA settings
+CUDA_OFFLOAD_ARCH = sm_80
+
 CPYTHON_EXT = $(shell python3-config --extension-suffix)
 CPTHON_EXT ?= .cpython.so 
-PYBIND_CXXFLAGS = -I../../extern/pybind11/include $(shell python3-config --includes)
+PYTHON_INCLUDES = $(shell python3-config --includes)
+
+######## pybind11 flags ########
+PYBIND_CXXFLAGS = -I../../extern/pybind11/include $(PYTHON_INCLUDES) 
 PYBIND_LDFLAGS = -shared
 
 ## System specific logic
@@ -74,17 +75,19 @@ else
   endif
 endif
 
-##### Enzyme #####
 ENZYME_CLANG_PLUGIN = $(ENZYME_DIR)/build/Enzyme/ClangEnzyme-$(LLVM_VERSION_MAJOR).$(SO_EXT)
 ENZYME_LLD_PLUGIN = $(ENZYME_DIR)/build/Enzyme/LLDEnzyme-$(LLVM_VERSION_MAJOR).$(SO_EXT)
 
-# Default Enzyme flags. We run Enzyme only during linking. 
+######## Enzyme flags ########
+# In order for Enzyme to access functions defined across multiple translation units,
+# we compile with link time optimization (LTO) and then run Enzyme only during
+# the linking step.
 # Adding the ClangEnzyme plugin to the compile step wih enzyme-enable=0 is necessary
-# for the compiler to pick up on frontend clang attributes like __attribute__((enzyme_inactive))
+# for the compiler to pick up on frontend clang attributes like __attribute__((enzyme_inactive)).
 ENZYME_CXXFLAGS = -O3 -flto -fplugin=$(ENZYME_CLANG_PLUGIN) -mllvm -enzyme-enable=0
-ENZYME_LDFLAGS = -fuse-ld=$(LD) -flto -Wl,-mllvm,-load=$(ENZYME_LLD_PLUGIN) -Wl,--load-pass-plugin=$(ENZYME_LLD_PLUGIN) -Wl,-mllvm,-enzyme-fast-math=0 
+ENZYME_LDFLAGS = -fuse-ld=$(LD) -flto -Wl,-mllvm,-load=$(ENZYME_LLD_PLUGIN) -Wl,--load-pass-plugin=$(ENZYME_LLD_PLUGIN)
 
-# Enzyme Type analysis parameters
+#ENZYME_LDFLAGS += -Wl,-mllvm,-enzyme-fast-math=0
 #ENZYME_LDFLAGS += -Wl,-mllvm,-enzyme-max-type-depth=2
 
 # Enzyme debugging options
@@ -94,8 +97,12 @@ ENZYME_LDFLAGS = -fuse-ld=$(LD) -flto -Wl,-mllvm,-load=$(ENZYME_LLD_PLUGIN) -Wl,
 #ENZYME_LDFLAGS += -Wl,-mllvm,-enzyme-print-type=1
 #ENZYME_LDFLAGS += -Wl,-mllvm,-enzyme-globals-default-inactive=1
 
-# For now keep C and CXX the same 
+# For now keep C and CXX flags the same
 ENZYME_CFLAGS = $(ENZYME_CXXFLAGS)
+
+######## CUDA flags ########
+CUDA_CXXFLAGS = --offload-arch=$(CUDA_OFFLOAD_ARCH) -fcuda-rdc
+CUDA_LDFLAGS = --offload-arch=$(CUDA_OFFLOAD_ARCH) -fcuda-rdc -L${CUDA_HOME}/lib64 -lcudart
 
 # Rule: print contents of Makefile variable
 print-%:

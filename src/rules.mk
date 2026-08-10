@@ -9,9 +9,20 @@
 
 OBJ_FILES = $(addsuffix .o, $(OBJS))
 
+# Executable linking rule
 ifdef EXEC
+ifeq ($(CUDA),true)
+
+# CUDA linking rule
+$(EXEC): $(OBJ_FILES)
+	$(CXX) $(CUDA_LDFLAGS) $(ENZYME_LDFLAGS) $^ -o $(EXEC)
+
+else
+
 $(EXEC): $(OBJ_FILES)
 	$(CXX) $(ENZYME_LDFLAGS) $^ -o $(EXEC)
+
+endif
 endif
 
 # pybind11 rules
@@ -42,6 +53,13 @@ endif
 
 %.o: %.c
 	$(CC) $(ENZYME_CFLAGS) -c $< -o $@
+
+# CUDA compile rules
+%.o: %.cu %.h
+	$(CXX) $(CUDA_CXXFLAGS) $(ENZYME_CXXFLAGS) -c $< -o $@
+
+%.o: %.cu
+	$(CXX) $(CUDA_CXXFLAGS) $(ENZYME_CXXFLAGS) --offload-arch=$(CUDA_OFFLOAD_ARCH) -c $< -o $@
 
 clean:
 	rm -f *.o *.ll	
