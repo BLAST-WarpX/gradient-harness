@@ -1,36 +1,14 @@
 ### Default build rules
-# Should define these variables in child Makefile
-#   EXEC = executable name
-#   OBJS = list of object files
-#   PYBIND_MODULE = name of pybind module
-#   PYBIND_OBJS = list of files with pybind11 bindings
-
 .PHONY: clean pybind
-
-OBJ_FILES = $(addsuffix .o, $(OBJS))
 
 # Executable linking rule
 ifdef EXEC
-ifeq ($(CUDA),true)
-
-# CUDA linking rule
-$(EXEC): $(OBJ_FILES)
-	$(CXX) $(CUDA_LDFLAGS) $(ENZYME_LDFLAGS) $^ -o $(EXEC)
-
-else
-
 $(EXEC): $(OBJ_FILES)
 	$(CXX) $(ENZYME_LDFLAGS) $^ -o $(EXEC)
-
-endif
 endif
 
 # pybind11 rules
 ifdef PYBIND_OBJS
-PYBIND_OBJ_FILES = $(addsuffix _pybind.o,$(PYBIND_OBJS))
-
-PYBIND_MODULE_FULL = $(PYBIND_MODULE)$(CPYTHON_EXT)
-
 pybind: $(PYBIND_MODULE_FULL)
 
 # Note: Because we run Enzyme at link time, we need to run Enzyme when linking pybind as well
@@ -53,13 +31,6 @@ endif
 
 %.o: %.c
 	$(CC) $(ENZYME_CFLAGS) -c $< -o $@
-
-# CUDA compile rules
-%.o: %.cu %.h
-	$(CXX) $(CUDA_CXXFLAGS) $(ENZYME_CXXFLAGS) -c $< -o $@
-
-%.o: %.cu
-	$(CXX) $(CUDA_CXXFLAGS) $(ENZYME_CXXFLAGS) --offload-arch=$(CUDA_OFFLOAD_ARCH) -c $< -o $@
 
 clean:
 	rm -f *.o *.ll	

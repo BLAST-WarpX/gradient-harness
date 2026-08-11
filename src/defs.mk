@@ -1,9 +1,17 @@
 ######## Global variables #########
+# The following variables should be defined in the subproject Makefile
+#   EXEC = executable name
+#   OBJS = list of object files
+#   PYBIND_MODULE = name of pybind module
+#   PYBIND_OBJS = list of files with pybind11 bindings
+
+OBJ_FILES = $(addsuffix .o, $(OBJS))
+PYBIND_OBJ_FILES = $(addsuffix _pybind.o,$(PYBIND_OBJS))
 
 # Update or export LLVM_VERSION_MAJOR if you are using a different LLVM version.
 # If you have LLVM installed in a specific location, export the environment variable
 # LLVM_INSTALL_DIR.
-LVM_VERSION_MAJOR ?= 21
+LLVM_VERSION_MAJOR ?= 21
 
 LD_NAME = ld.lld
 
@@ -16,6 +24,7 @@ CUDA_OFFLOAD_ARCH = sm_80
 CPYTHON_EXT = $(shell python3-config --extension-suffix)
 CPTHON_EXT ?= .cpython.so 
 PYTHON_INCLUDES = $(shell python3-config --includes)
+PYBIND_MODULE_FULL = $(PYBIND_MODULE)$(CPYTHON_EXT)
 
 ######## pybind11 flags ########
 PYBIND_CXXFLAGS = -I../../extern/pybind11/include $(PYTHON_INCLUDES) 
@@ -99,10 +108,6 @@ ENZYME_LDFLAGS = -fuse-ld=$(LD) -flto -Wl,-mllvm,-load=$(ENZYME_LLD_PLUGIN) -Wl,
 
 # For now keep C and CXX flags the same
 ENZYME_CFLAGS = $(ENZYME_CXXFLAGS)
-
-######## CUDA flags ########
-CUDA_CXXFLAGS = --offload-arch=$(CUDA_OFFLOAD_ARCH) -fcuda-rdc
-CUDA_LDFLAGS = --offload-arch=$(CUDA_OFFLOAD_ARCH) -fcuda-rdc -L${CUDA_HOME}/lib64 -lcudart
 
 # Rule: print contents of Makefile variable
 print-%:
