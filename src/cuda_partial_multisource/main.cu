@@ -1,11 +1,10 @@
 /**
  * Enzyme (single source) + CUDA (multisource) example
  *
- * In this example we split the CUDA build over multiple translation units (device kernels are allowed
+ * In this example we split the CUDA build over multiple translation units (CUDA kernels are allowed
  * to call kernels in other TUs). But we only use Enzyme autodiff within a single TU.
- *
- * NOTE: Currently this build fails.
  */
+#include <__clang_cuda_runtime_wrapper.h>
 #include <iostream>
 #include <sstream>
 #include <cstddef>
@@ -15,6 +14,22 @@
 #include <cuda/cmath>
 
 #include "saxpy.cuh"
+
+/**
+ * Currently we have not successfully gotten clang to build CUDA RDC code that
+ * launches a __global__ function defined in a separate translation unit.
+ * The workaround for now is we define a "launcher" function in the same source
+ * file as the launch which wraps the kernel we are launching.
+ */ 
+__global__
+void saxpyLauncher(int n, float * a, float * x, float * y) {
+    saxpy(n, a, x, y);
+}
+
+__global__
+void dsaxpyLauncher(int n, float* a,  float* da, float* x, float* dx, float* y, float* dy) {
+    dsaxpy(n, a, da, x, dx, y, dy);
+}
 
 std::string arrayToString(int n, float * arr) {
     std::stringstream ss;
@@ -94,8 +109,8 @@ int main() {
     cudaMemcpy(dx, dx_host, fArrSize, cudaMemcpyHostToDevice);
     cudaMemcpy(dy, dy_host, fArrSize, cudaMemcpyHostToDevice);
 
-    saxpyWrapper<<<blocks, threadsPerBlock>>>(n, a, x, y);
-    //dsaxpy<<<blocks, threadsPerBlock>>>(n, a, da, x, dx, y, dy);
+    //saxpyWrapper<<<blocks, threadsPerBlock>>>(n, a, x, y);
+    dsaxpyLauncher<<<blocks, threadsPerBlock>>>(n, a, da, x, dx, y, dy);
     
     cudaDeviceSynchronize();
 

@@ -4,16 +4,15 @@ OBJS = main saxpy
 include ../defs.mk
 include ../rules.mk
 
-# For now we override the default build rules
-CUDA_CXXFLAGS = --offload-arch=$(CUDA_OFFLOAD_ARCH) -fgpu-rdc -fplugin=$(ENZYME_CLANG_PLUGIN)
-CUDA_LDFLAGS = --offload-arch=$(CUDA_OFFLOAD_ARCH) -fgpu-rdc --offload-new-driver -L${CUDA_HOME}/lib64 -lcudart -fplugin=$(ENZYME_CLANG_PLUGIN)
+CUDA_CXXFLAGS = --offload-arch=$(CUDA_OFFLOAD_ARCH) -fcuda-rdc -fplugin=$(ENZYME_CLANG_PLUGIN)
+CUDA_LDFLAGS = --offload-arch=$(CUDA_OFFLOAD_ARCH) -fcuda-rdc --offload-new-driver -L${CUDA_HOME}/lib64 -lcudart 
 
 # CUDA linking rule
 $(EXEC): $(OBJ_FILES)
 	$(CXX) $(CUDA_LDFLAGS) $^ -o $(EXEC)
 
 # CUDA multisource compile rules
-%.o: %.cu %.h
+%.o: %.cu %.cuh
 	$(CXX) $(CUDA_CXXFLAGS) -c $< -o $@
 
 %.o: %.cu
