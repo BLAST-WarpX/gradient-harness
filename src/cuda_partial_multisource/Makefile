@@ -4,7 +4,9 @@ OBJS = main saxpy
 include ../defs.mk
 include ../rules.mk
 
-CUDA_CXXFLAGS = --offload-arch=$(CUDA_OFFLOAD_ARCH) -fcuda-rdc -fplugin=$(ENZYME_CLANG_PLUGIN)
+# Note: -foffload-lto is required due to an LLVM issue:
+# https://github.com/llvm/llvm-project/issues/118212
+CUDA_CXXFLAGS = --offload-arch=$(CUDA_OFFLOAD_ARCH) -fcuda-rdc -foffload-lto -fplugin=$(ENZYME_CLANG_PLUGIN)
 CUDA_LDFLAGS = --offload-arch=$(CUDA_OFFLOAD_ARCH) -fcuda-rdc --offload-new-driver -L${CUDA_HOME}/lib64 -lcudart 
 
 # CUDA linking rule

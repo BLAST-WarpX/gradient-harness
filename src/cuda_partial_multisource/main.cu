@@ -4,7 +4,6 @@
  * In this example we split the CUDA build over multiple translation units (CUDA kernels are allowed
  * to call kernels in other TUs). But we only use Enzyme autodiff within a single TU.
  */
-#include <__clang_cuda_runtime_wrapper.h>
 #include <iostream>
 #include <sstream>
 #include <cstddef>
@@ -14,22 +13,6 @@
 #include <cuda/cmath>
 
 #include "saxpy.cuh"
-
-/**
- * Currently we have not successfully gotten clang to build CUDA RDC code that
- * launches a __global__ function defined in a separate translation unit.
- * The workaround for now is we define a "launcher" function in the same source
- * file as the launch which wraps the kernel we are launching.
- */ 
-__global__
-void saxpyLauncher(int n, float * a, float * x, float * y) {
-    saxpy(n, a, x, y);
-}
-
-__global__
-void dsaxpyLauncher(int n, float* a,  float* da, float* x, float* dx, float* y, float* dy) {
-    dsaxpy(n, a, da, x, dx, y, dy);
-}
 
 std::string arrayToString(int n, float * arr) {
     std::stringstream ss;
@@ -48,13 +31,11 @@ int main() {
     int blocks = cuda::ceil_div(n, threadsPerBlock);
 
     // Pointers to host memory
-    float *a_host;
-    float *x_host, *y_host;
+    float *a_host, *x_host, *y_host;
     float *da_host, *dx_host, *dy_host; 
 
     // Pointers to device memory 
-    float *a;
-    float *x, *y;
+    float *a, *x, *y;
     float *da, *dx, *dy;
 
     // Allocate host memory
@@ -74,7 +55,7 @@ int main() {
     cudaMalloc(&dy, fArrSize);
 
     /// Initialize host memory
-    *a_host = 12.0;
+    *a_host = 2.0;
     x_host[0] = 1.0; x_host[1] = 2.0; x_host[2] = 3.0; x_host[3] = 4.0;
     y_host[0] = 5.0; y_host[1] = 6.0; y_host[2] = 7.0; y_host[3] = 8.0;
     
@@ -92,7 +73,7 @@ int main() {
     std::memset(dy_host, 0, fArrSize);
     dy_host[0] = 1.0;
 
-    std::cout << "a = " << *a_host << "\n";
+    std::cout << "a = " << a << "\n";
     std::cout << "x = " << arrayToString(n, x_host) << "\n";
     std::cout << "y = " << arrayToString(n, y_host) << "\n";
     std::cout << "da = " << *da_host << "\n";
@@ -109,8 +90,7 @@ int main() {
     cudaMemcpy(dx, dx_host, fArrSize, cudaMemcpyHostToDevice);
     cudaMemcpy(dy, dy_host, fArrSize, cudaMemcpyHostToDevice);
 
-    //saxpyWrapper<<<blocks, threadsPerBlock>>>(n, a, x, y);
-    dsaxpyLauncher<<<blocks, threadsPerBlock>>>(n, a, da, x, dx, y, dy);
+    dsaxpy<<<blocks, threadsPerBlock>>>(n, a, da, x, dx, y, dy);
     
     cudaDeviceSynchronize();
 
@@ -122,7 +102,7 @@ int main() {
     cudaMemcpy(dx_host, dx, fArrSize, cudaMemcpyDeviceToHost);
     cudaMemcpy(dy_host, dy, fArrSize, cudaMemcpyDeviceToHost);
 
-    std::cout << "a = " << *a_host << "\n";
+    std::cout << "a = " << a << "\n";
     std::cout << "x = " << arrayToString(n, x_host) << "\n";
     std::cout << "y = " << arrayToString(n, y_host) << "\n";
     std::cout << "da = " << *da_host << "\n";
