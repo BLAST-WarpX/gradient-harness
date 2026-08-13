@@ -27,13 +27,16 @@ __device__ RT __enzyme_autodiff(void*, T...);
 /**
  * Reverse mode derivative of saxpy
  *
+ * Because we are running autodiff on a function in a different source file,
+ * we need to use LLDEnzyme with LTO.
+ *
  * Let f(a, x, y) = a*x + y, Jf Jacobian of f w.r.t the vector [a, x, y]
  * Let dy_in = value of dy at the time dsaxpy is called
  * After the dsaxpy call, we have dy = Jf^t * dy_in
  */
 __global__
 void dsaxpy(int n, float * a, float * da, float * x, float * dx, float * y, float * dy) {
-    __enzyme_autodiff<void>((void*)saxpy,
+    __enzyme_autodiff<void>((void*)saxpyImpl,
             enzyme_dup, a, da, enzyme_dup, x, dx, enzyme_dup, y, dy);
 }
 

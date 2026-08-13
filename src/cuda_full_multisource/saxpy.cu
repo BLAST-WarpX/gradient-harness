@@ -1,5 +1,5 @@
 __device__
-void saxpy(int n, float * a, float * x, float * y) {
+void saxpyImpl(int n, float * a, float * x, float * y) {
     int i = threadIdx.x + blockDim.x * blockIdx.x;
 
     if (i < n) {
@@ -8,7 +8,7 @@ void saxpy(int n, float * a, float * x, float * y) {
 }
 
 __global__
-void saxpyWrapper(int n, float * a, float * x, float * y) {
-    saxpy(n, a, x, y);
+void saxpy(int n, float * a, float * x, float * y) {
+    saxpyImpl(n, a, x, y);
 }
 
