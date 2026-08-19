@@ -10,7 +10,7 @@ PYBIND_OBJ_FILES = $(addsuffix _pybind.o,$(PYBIND_OBJS))
 
 # Update or export LLVM_VERSION_MAJOR if you are using a different LLVM version.
 # If you have LLVM installed in a specific location, export the environment variable
-# LLVM_INSTALL_DIR.
+# LLVM_DIR.
 LLVM_VERSION_MAJOR ?= 21
 
 LD_NAME = ld.lld
@@ -48,18 +48,18 @@ ifeq ($(UNAME), Linux)
     # E.g. On Perlmutter: `module load llvm/nightly`
 
     # For spack: uncomment line below, or load llvm in a spack environment 
-    #LLVM_INSTALL_DIR ?= $(shell spack location -i llvm@$(LLVM_VERSION_MAJOR))
+    #LLVM_DIR ?= $(shell spack location -i llvm@$(LLVM_VERSION_MAJOR))
   endif
 else ifeq ($(UNAME), Darwin)
   # macOS
-  LLVM_INSTALL_DIR ?= $(shell brew --prefix)/opt/llvm@$(LLVM_VERSION_MAJOR)
+  LLVM_DIR ?= $(shell brew --prefix)/opt/llvm@$(LLVM_VERSION_MAJOR)
 
   # On mac, brew installs lld with llvm@16
   # TODO: other versions of llvm might install lld too
   ifeq ($(LLVM_VERSION_MAJOR),16)
-    LLD_INSTALL_DIR ?= $(LLVM_INSTALL_DIR)
+    LLD_DIR ?= $(LLVM_DIR)
   else
-    LLD_INSTALL_DIR ?= $(shell brew --prefix)/opt/lld@$(LLVM_VERSION_MAJOR)
+    LLD_DIR ?= $(shell brew --prefix)/opt/lld@$(LLVM_VERSION_MAJOR)
   endif
 
   LD_NAME = ld64.lld
@@ -68,19 +68,19 @@ else ifeq ($(UNAME), Darwin)
   PYBIND_LDFLAGS += -shared -undefined dynamic_lookup
 endif
  
-ifndef LLVM_INSTALL_DIR
-  # User didn't provide LLVM_INSTALL_DIR, use compilers/linkers in PATH
+ifndef LLVM_DIR
+  # User didn't provide LLVM_DIR, use compilers/linkers in PATH
   CC = clang
   CXX = clang++
   LD = lld
 else
-  CC = $(LLVM_INSTALL_DIR)/bin/clang
-  CXX = $(LLVM_INSTALL_DIR)/bin/clang++
+  CC = $(LLVM_DIR)/bin/clang
+  CXX = $(LLVM_DIR)/bin/clang++
   
-  ifndef LLD_INSTALL_DIR
+  ifndef LLD_DIR
     LD = lld 
   else
-	LD = $(LLD_INSTALL_DIR)/bin/$(LD_NAME)
+	LD = $(LLD_DIR)/bin/$(LD_NAME)
   endif
 endif
 

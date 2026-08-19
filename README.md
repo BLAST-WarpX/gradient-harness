@@ -46,12 +46,12 @@ pipx install lit
 
 To build Enzyme:
 ```
-LLVM_INSTALL_DIR=<your install location>
+LLVM_DIR=<LLVM install location>
 LIT=${HOME}/.local/bin/lit   # Update lit install location if necessary
 
 cd ~/src/Enzyme
 mkdir -p build && cd build
-cmake -G Ninja ../enzyme -DLLVM_DIR=${LLVM_INSTALL_DIR}/lib/cmake/llvm -DLLVM_EXTERNAL_LIT=${LIT}
+cmake -G Ninja ../enzyme -DLLVM_DIR=${LLVM_DIR}/lib/cmake/llvm -DLLVM_EXTERNAL_LIT=${LIT}
 ninja
 ```
 
@@ -75,9 +75,9 @@ the environment variable `LLVM_VERSION_MAJOR` to your version before building.
 export LLVM_VERSION_MAJOR=<LLVM version>
 ```
 
-The build will attempt to locate LLVM based on the operating system, or you can manually set the location with the environment variable `LLVM_INSTALL_DIR`: 
+The build will attempt to locate LLVM based on the operating system, or you can manually set the location with the environment variable `LLVM_DIR`: 
 ```
-export LLVM_INSTALL_DIR=<LLVM install location>
+export LLVM_DIR=<LLVM install location>
 ```
 
 ## Perlmutter build instructions
@@ -109,7 +109,7 @@ python -m unittest -v <test file>.py
 # Additional Perlmutter notes
 
 ## Spack virtual environments
-If you wish to test with a specific version of LLVM on Perlmutter which isn't available as a module, you will have to set up a spack
+If you want to test with a specific version of LLVM on Perlmutter which isn't available as a module, you will have to set up a spack
 virtual environment. First set you spack user cache to `$PSCRATCH/.spack` in `~/.bashrc`. This forces spack to install packages in
 the scratch file system, so your home directory doesn't fill up. 
 ```
@@ -120,10 +120,10 @@ source ~/.bashrc
 Then create and activate the environment:
 ```
 export LLVM_VERSION_MAJOR=<llvm version>
-export SPACK_ENV_NAME=gradient-harness-llvm-${LLVM_VERSION_MAJOR}
+export SPACK_ENV=gh-llvm-${LLVM_VERSION_MAJOR}
 
-spack env create ${SPACK_ENV_NAME}
-spack env activate ${SPACK_ENV_NAME}
+spack env create ${SPACK_ENV}
+spack env activate ${SPACK_ENV}
 ```
 
 Install LLVM and other desired packages. Note that LLVM builds are computationally intensive, so you should run the build through 
